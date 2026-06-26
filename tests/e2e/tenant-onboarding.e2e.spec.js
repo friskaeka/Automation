@@ -1,59 +1,49 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
+const {
+  loginViaUi,
+  logoutViaUi,
+  registerTenantViaUi,
+  uniqueTenant
+} = require('../helpers/medistock');
 
-test.describe('Tenant Onboarding', () => {
-  test('Scenario 1: A new pharmacy registers successfully', async ({ page }) => {
-    await test.step('Given a prospective pharmacy owner navigates to the public landing page', async () => {
-      // TODO: Navigate to /
+test.describe('Tenant Onboarding @tenant-onboarding', () => {
+  test('TC-ONB-001 - A new pharmacy registers successfully @critical @positive', async ({ page }) => {
+    const tenant = uniqueTenant('onboard');
+
+    await test.step('Given user opens the public sign-up page', async () => {
+      await page.goto('/sign-up');
+      await expect(page.getByRole('heading', { name: 'Daftarkan Apotek Anda' })).toBeVisible();
     });
 
-    await test.step('When they click "Daftar Gratis" to go to the sign-up page', async () => {
-      // TODO: Click sign up link
+    await test.step('When user fills and submits valid unique pharmacy data', async () => {
+      await registerTenantViaUi(page, tenant);
     });
 
-    await test.step('And they fill out the registration form with valid, unique details', async () => {
-      // TODO: Fill out form
-    });
-
-    await test.step('And they submit the form', async () => {
-      // TODO: Submit form
-    });
-
-    await test.step('Then a new tenant record and owner user are created in the system', async () => {
-      // TODO: Assert registration success
-    });
-
-    await test.step('And they are redirected to the /dashboard', async () => {
-      // TODO: Check URL
-    });
-
-    await test.step('And they see a banner indicating "Masa percobaan aktif" (Trial active)', async () => {
-      // TODO: Check banner visibility
+    await test.step('Then user is redirected to dashboard and trial banner is visible', async () => {
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await expect(page.getByText('Masa percobaan aktif.')).toBeVisible();
     });
   });
 
-  test('Scenario 2: Secure Two-Step Login', async ({ page }) => {
-    await test.step('Given a registered pharmacy owner has just logged out and is on the /sign-in page', async () => {
-      // TODO: Log out and navigate to /sign-in
+  test('TC-ONB-002 - Secure two-step login works after logout @critical @positive', async ({ page }) => {
+    const tenant = await registerTenantViaUi(page, uniqueTenant('loginflow'));
+
+    await test.step('Given registered pharmacy owner has logged out', async () => {
+      await logoutViaUi(page);
+      await expect(page).toHaveURL(/\/sign-in$/);
     });
 
-    await test.step('When they enter their pharmacy email and proceed', async () => {
-      // TODO: Enter email and click next
+    await test.step('When user enters pharmacy email, username, and password', async () => {
+      await loginViaUi(page, tenant);
     });
 
-    await test.step('And they enter their correct username and password', async () => {
-      // TODO: Enter credentials and submit
-    });
-
-    await test.step('Then they successfully log into the system', async () => {
-      // TODO: Assert login success
-    });
-
-    await test.step('And they are redirected back to the /dashboard', async () => {
-      // TODO: Check URL
+    await test.step('Then user is authenticated into dashboard', async () => {
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await expect(page.getByText('Masa percobaan aktif.')).toBeVisible();
     });
   });
 
-  test('Scenario 3: Negative Case - Registration with duplicate global data', async ({ page }) => {
-    // ... setup and test steps verifying global uniqueness of SIA and Pharmacy Name
+  test('TC-ONB-003 - Negative case: registration with duplicate global data @negative', async () => {
+    test.fixme(true, 'Needs a stable product error contract for duplicate pharmacy/SIA/email validation before automating.');
   });
 });

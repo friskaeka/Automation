@@ -1,49 +1,44 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
+const { TONO_ACCOUNT, loginViaUi } = require('../helpers/medistock');
 
-test.describe('Cashier and POS Operations', () => {
-  test('Scenario 1: Shift management with starting and ending balances', async ({ page }) => {
-    // ... setup and test steps
+test.describe('Cashier and POS Operations @cashier @pos', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUi(page, TONO_ACCOUNT);
   });
 
-  test('Scenario 2: Processing a standard sales transaction', async ({ page }) => {
-    await test.step('Given an active cashier shift', async () => {
-      // TODO: Login and start shift
-    });
+  test('TC-CASH-001 - Cashier POS route is accessible and ready for shift/transaction @positive', async ({ page }) => {
+    await page.goto('/cashier/pos');
+    await expect(page).toHaveURL(/\/cashier\/pos$/);
 
-    await test.step('When the cashier adds items to the cart, prioritizing the FEFO (First Expired First Out) batches', async () => {
-      // TODO: Search product and select FEFO batch
-    });
+    const startShiftDialog = page.getByRole('dialog', { name: 'Mulai Sesi Kasir' });
+    if (await startShiftDialog.isVisible().catch(() => false)) {
+      await expect(startShiftDialog.getByRole('textbox', { name: 'Saldo Awal' })).toBeVisible();
+      await expect(startShiftDialog.getByRole('button', { name: 'Mulai Sesi' })).toBeVisible();
+      return;
+    }
 
-    await test.step('And they apply layered discounts or markups up to 5 layers', async () => {
-      // TODO: Apply multiple discount/markup components
-    });
-
-    await test.step('And they process a payment using Cash or Debit', async () => {
-      // TODO: Complete checkout
-    });
-
-    await test.step('Then the transaction is saved in the Riwayat Penjualan', async () => {
-      // TODO: Verify history
-    });
-
-    await test.step('And the inventory stock is correctly decremented', async () => {
-      // TODO: Verify stock
-    });
+    const main = page.getByRole('main');
+    await expect(main).toBeVisible();
+    await expect(main).toContainText(/Kasir|Penjualan|Sesi|Transaksi|Saldo/i);
   });
 
-  test('Scenario 3: Processing a prescription (Resep Racikan)', async ({ page }) => {
-    // ... setup and test steps
+  test('TC-CASH-002 - Processing a standard sales transaction with FEFO batch selection @positive', async () => {
+    test.fixme(true, 'Requires purchase-invoice stock fixture with multiple expiry batches and stable POS checkout controls.');
   });
 
-  test('Scenario 4: Negative Case - Layered discounts exceed 100%', async ({ page }) => {
-    // ... setup and test steps verifying final price is exactly 0
+  test('TC-CASH-003 - Processing a prescription / Resep Racikan @positive', async () => {
+    test.fixme(true, 'Requires stable doctor/patient/product stock fixture and prescription UI contract.');
   });
 
-  test('Scenario 5: Corner Case - Exact FEFO date match resolves to smallest quantity', async ({ page }) => {
-    // ... setup and test steps verifying smallest quantity batch is chosen
+  test('TC-CASH-004 - Layered discounts exceeding 100 percent are handled safely @negative', async () => {
+    test.fixme(true, 'Requires stable layered discount component and expected final-price rule.');
   });
 
-  test('Scenario 6: Negative Case - Dangling shift caused by browser closure', async ({ page }) => {
-    // ... setup and test steps verifying shift remains active for next login
+  test('TC-CASH-005 - Exact FEFO date match resolves to smallest quantity @abnormal', async () => {
+    test.fixme(true, 'Requires controlled stock batches with identical expiry dates.');
+  });
+
+  test('TC-CASH-006 - Dangling shift remains active after browser closure @abnormal', async () => {
+    test.fixme(true, 'Requires multi-session browser control and safe shift cleanup.');
   });
 });

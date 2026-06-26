@@ -1,6 +1,11 @@
 const { expect } = require('@playwright/test');
 
 const DEFAULT_PASSWORD = 'CodexTest123!';
+const TONO_ACCOUNT = {
+  email: process.env.MEDISTOCK_TONO_EMAIL || 'tono12@yopmail.com',
+  username: process.env.MEDISTOCK_TONO_USERNAME || 'Tono',
+  password: process.env.MEDISTOCK_TONO_PASSWORD || 'Tono1234'
+};
 
 function uniqueTenant(prefix = 'qa') {
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -81,6 +86,7 @@ async function authState(page) {
 
 module.exports = {
   DEFAULT_PASSWORD,
+  TONO_ACCOUNT,
   authState,
   expectAuthenticatedShell,
   loginViaUi,

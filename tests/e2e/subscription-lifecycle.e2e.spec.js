@@ -1,69 +1,36 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
+const { registerTenantViaUi, uniqueTenant } = require('../helpers/medistock');
 
-test.describe('Subscription Lifecycle', () => {
-  test('Scenario 1: Applying active coupon within limit to a plan', async ({ page }) => {
-    await test.step('Given a pharmacy owner is viewing the list of available subscription plans', async () => {
-      // TODO: Navigate to pricing/plans page
+test.describe('Subscription Lifecycle @subscription', () => {
+  test('TC-SUB-001 - Trial subscription is created after tenant registration @positive', async ({ page }) => {
+    const tenant = await registerTenantViaUi(page, uniqueTenant('subtrial'));
+
+    await test.step('Then auth storage contains trialing subscription status', async () => {
+      const state = await page.evaluate(() => JSON.parse(localStorage.getItem('auth-storage')).state);
+      expect(state.user.username).toBe(tenant.username);
+      expect(state.user.subscriptionStatus).toBe('trialing');
     });
 
-    await test.step('When they select an active plan', async () => {
-      // TODO: Click on an active plan
-    });
-
-    await test.step('And they apply a valid, active coupon within its limit', async () => {
-      // TODO: Enter valid coupon code
-    });
-
-    await test.step('Then the backend calculates the correct base price, discount, tax, and final price', async () => {
-      // TODO: Assert UI or API response matches expected calculation
-    });
-
-    await test.step('And the UI displays the calculated final price', async () => {
-      // TODO: Check final price in UI
+    await test.step('And billing page is accessible during trial', async () => {
+      await page.goto('/settings/billing');
+      await expect(page.getByText('Masa percobaan aktif.')).toBeVisible();
+      await expect(page.getByRole('main')).toBeVisible();
     });
   });
 
-  test('Scenario 2: Subscription activation grants entitlements', async ({ page }) => {
-    await test.step('Given a pharmacy has a trialing subscription status', async () => {
-      // TODO: Setup a trialing tenant
-    });
-
-    await test.step('When a successful payment webhook activates their subscription', async () => {
-      // TODO: Simulate webhook or API call to activate
-    });
-
-    await test.step('Then their subscription status becomes active', async () => {
-      // TODO: Check status in UI or API
-    });
-
-    await test.step('And their feature entitlements are refreshed based on the chosen plan', async () => {
-      // TODO: Assert entitlements updated
-    });
-
-    await test.step('And they can access premium features corresponding to their plan', async () => {
-      // TODO: Navigate to premium feature and assert access
-    });
+  test('TC-SUB-002 - Applying active coupon within limit to a plan @calculation', async () => {
+    test.fixme(true, 'Requires known active coupon test data and expected price/tax calculation contract.');
   });
 
-  test('Scenario 3: Changing a plan updates entitlements', async ({ page }) => {
-    await test.step('Given a pharmacy with an active subscription', async () => {
-      // TODO: Setup active tenant
-    });
-
-    await test.step('When they successfully upgrade to a higher tier plan', async () => {
-      // TODO: Upgrade plan
-    });
-
-    await test.step('Then their subscription reflects the new plan', async () => {
-      // TODO: Check subscription info
-    });
-
-    await test.step('And their entitlements are immediately updated to include the new features', async () => {
-      // TODO: Assert access to new features
-    });
+  test('TC-SUB-003 - Subscription activation grants entitlements @webhook', async () => {
+    test.fixme(true, 'Requires successful payment webhook or admin subscription activation fixture.');
   });
 
-  test('Scenario 4: Edge Case - Downgrading blocked by current usage limits', async ({ page }) => {
-    // ... setup and test steps verifying usage limit blocks downgrade
+  test('TC-SUB-004 - Changing a plan updates entitlements @subscription', async () => {
+    test.fixme(true, 'Requires active paid subscription fixture and selectable upgrade/downgrade plans.');
+  });
+
+  test('TC-SUB-005 - Downgrading blocked by current usage limits @negative', async () => {
+    test.fixme(true, 'Requires tenant over-limit usage fixture and product rule for downgrade blocking.');
   });
 });

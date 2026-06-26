@@ -1,41 +1,87 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
+const {
+  TONO_ACCOUNT,
+  expectAuthenticatedShell,
+  loginViaUi,
+  logoutViaUi
+} = require('../helpers/medistock');
 
-test.describe('POS Authentication and Account Management', () => {
-  test('Scenario 1: Two-layer login process', async ({ page }) => {
-    await test.step('Given a user navigates to the POS dashboard', async () => {
-      // TODO: Navigate to login page
+test.describe('POS Authentication and Account Management @auth', () => {
+  test('TC-AUTH-001 - Two-layer login process with Tono account @critical @positive', async ({ page }) => {
+    await test.step('Given user opens sign-in page', async () => {
+      await page.goto('/sign-in');
+      await expect(page.getByRole('heading', { name: 'Login Akun Apotek' })).toBeVisible();
     });
 
-    await test.step('When they perform the first layer login with the Apotek email', async () => {
-      // TODO: Enter Apotek email and proceed
+    await test.step('When user logs in through pharmacy email and user credentials', async () => {
+      await loginViaUi(page, TONO_ACCOUNT);
     });
 
-    await test.step('And they perform the second layer login with their User credentials', async () => {
-      // TODO: Enter User credentials (Username/Password)
-    });
-
-    await test.step('Then they are successfully authenticated into the POS system', async () => {
-      // TODO: Assert dashboard is visible
+    await test.step('Then dashboard shell is authenticated', async () => {
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await expectAuthenticatedShell(page);
     });
   });
 
-  test('Scenario 2: Role-based access for Pemilik (Owner)', async ({ page }) => {
-    // ... setup and test steps
+  test('TC-AUTH-002 - Pemilik can access owner protected routes @positive', async ({ page }) => {
+    await loginViaUi(page, TONO_ACCOUNT);
+
+    const routes = [
+      '/dashboard',
+      '/database/unit',
+      '/database/catalog',
+      '/database/supplier',
+      '/database/payment-methods',
+      '/database/doctor',
+      '/database/patient',
+      '/purchases/purchase-invoice',
+      '/cashier/pos',
+      '/products/stock',
+      '/settings/account',
+      '/settings/billing'
+    ];
+
+    for (const route of routes) {
+      await test.step(`Then Pemilik can open ${route}`, async () => {
+        await page.goto(route);
+        await expect(page).toHaveURL(new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+        await expectAuthenticatedShell(page);
+      });
+    }
   });
 
-  test('Scenario 3: Role-based access for Karyawan (Employee)', async ({ page }) => {
-    // ... setup and test steps
+  test('TC-AUTH-003 - Karyawan role-based access @positive', async () => {
+    test.fixme(true, 'Needs stable employee account credentials and expected permission matrix.');
   });
 
-  test('Scenario 4: Two-layer logout process', async ({ page }) => {
-    // ... setup and test steps
+  test('TC-AUTH-004 - Two-layer logout process @positive', async ({ page }) => {
+    await loginViaUi(page, TONO_ACCOUNT);
+    await logoutViaUi(page);
+    await expect(page).toHaveURL(/\/sign-in$/);
   });
 
-  test('Scenario 5: Negative Case - Invalid credentials', async ({ page }) => {
-    // ... setup and test steps checking for error messages
+  test('TC-AUTH-005 - Invalid user credentials are rejected @negative', async ({ page }) => {
+    await page.goto('/sign-in');
+    await page.getByRole('textbox', { name: 'Email Apotek' }).fill(TONO_ACCOUNT.email);
+    await page.getByRole('button', { name: 'Lanjutkan' }).click();
+    await expect(page).toHaveURL(/\/sign-in\/user$/);
+
+    await page.getByRole('textbox', { name: 'Username' }).fill(TONO_ACCOUNT.username);
+    await page.getByRole('textbox', { name: 'Password User' }).fill('WrongPassword123');
+
+    const loginResponsePromise = page.waitForResponse(
+      response => response.url().includes('/api/auth/login') && response.request().method() === 'POST'
+    );
+    await page.getByRole('button', { name: 'Masuk' }).click();
+
+    const loginResponse = await loginResponsePromise;
+    expect(loginResponse.ok()).toBe(false);
+    await expect(page).toHaveURL(/\/sign-in\/user$/);
   });
 
-  test('Scenario 6: Edge Case - Direct URL access to restricted routes', async ({ page }) => {
-    // ... setup and test steps verifying redirect on unauthorized URL access
+  test('TC-AUTH-006 - Direct URL access to protected route redirects unauthenticated user @negative', async ({ page }) => {
+    await page.goto('/settings/account');
+    await expect(page).toHaveURL(/\/sign-in/);
+    await expect(page.getByRole('heading', { name: 'Login Akun Apotek' })).toBeVisible();
   });
 });

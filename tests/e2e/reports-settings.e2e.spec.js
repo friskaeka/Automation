@@ -1,41 +1,46 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
+const { TONO_ACCOUNT, expectAuthenticatedShell, loginViaUi } = require('../helpers/medistock');
 
-test.describe('Reports, Settings, and Notifications', () => {
-  test('Scenario 1: Viewing the Laporan Laba/Rugi (Profit & Loss)', async ({ page }) => {
-    // ... setup and test steps
+test.describe('Reports, Settings, and Notifications @reports @settings', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUi(page, TONO_ACCOUNT);
   });
 
-  test('Scenario 2: Editing User Privileges in Pengaturan', async ({ page }) => {
-    // ... setup and test steps
+  test('TC-RPT-001 - Revenue report route opens and handles current data state @positive', async ({ page }) => {
+    await page.goto('/laporan/pendapatan');
+    await expect(page).toHaveURL(/\/laporan\/pendapatan$/);
+    await expectAuthenticatedShell(page);
+    await expect(page.getByRole('main')).toBeVisible();
   });
 
-  test('Scenario 3: Generating and managing Notifications', async ({ page }) => {
-    await test.step('Given a condition triggers a notification', async () => {
-      // TODO: Trigger a condition (e.g., low stock or price override)
-    });
-
-    await test.step('When the Pemilik logs in', async () => {
-      // TODO: Login as Owner
-    });
-
-    await test.step('Then they see a notification counter badge', async () => {
-      // TODO: Check notification counter
-    });
-
-    await test.step('When they click the notification', async () => {
-      // TODO: Click notification
-    });
-
-    await test.step('Then it is marked as "Sudah dibaca" (Read)', async () => {
-      // TODO: Verify read status
-    });
-
-    await test.step('And they are redirected to the relevant page', async () => {
-      // TODO: Verify URL redirect
-    });
+  test('TC-SET-001 - Account settings route shows tenant account context @positive', async ({ page }) => {
+    await page.goto('/settings/account');
+    await expect(page).toHaveURL(/\/settings\/account$/);
+    await expectAuthenticatedShell(page);
+    await expect(async () => {
+      const text = await page.getByRole('main').innerText();
+      expect(text.toLowerCase()).toContain(TONO_ACCOUNT.username.toLowerCase());
+    }).toPass({ timeout: 10000 });
   });
 
-  test('Scenario 4: Corner Case - Report generation with exactly zero transactions', async ({ page }) => {
-    // ... setup and test steps verifying empty state handling
+  test('TC-SET-002 - Billing settings route is accessible @positive', async ({ page }) => {
+    await page.goto('/settings/billing');
+    await expect(page).toHaveURL(/\/settings\/billing$/);
+    await expectAuthenticatedShell(page);
+    await expect(page.getByRole('main')).toBeVisible();
+  });
+
+  test('TC-NOTIF-001 - Notification panel can be opened @positive', async ({ page }) => {
+    await page.goto('/dashboard');
+    await page.getByRole('button', { name: 'Notifikasi' }).click();
+    await expect(page.getByText(/Notifikasi|Belum dibaca|Sudah dibaca|Tidak ada/i).first()).toBeVisible();
+  });
+
+  test('TC-SET-003 - Editing user privileges in Pengaturan @settings', async () => {
+    test.fixme(true, 'Requires safe role/permission fixture and rollback strategy.');
+  });
+
+  test('TC-RPT-002 - Profit and Loss report calculation with known transaction data @calculation', async () => {
+    test.fixme(true, 'Requires stable paid sales and HPP fixture to assert exact Laba/Rugi numbers.');
   });
 });
