@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:e2e": "playwright test tests/e2e",
+    "test:database": "playwright test tests/e2e/database-input-tono.spec.js",
     "test:smoke": "playwright test tests/e2e/medistock-smoke.spec.js",
     "test:regression": "playwright test tests/e2e/brd-regressions.spec.js",
     "test:headed": "playwright test --headed"
