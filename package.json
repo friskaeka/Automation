@@ -1,0 +1,16 @@
+{
+  "name": "medistock-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright end-to-end tests for Medistock PharmaSaaS BRD requirements.",
+  "scripts": {
+    "test": "playwright test",
+    "test:e2e": "playwright test tests/e2e",
+    "test:smoke": "playwright test tests/e2e/medistock-smoke.spec.js",
+    "test:regression": "playwright test tests/e2e/brd-regressions.spec.js",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}
