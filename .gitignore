@@ -6,3 +6,4 @@ test-results/
 .playwright/
 .playwright-mcp/
 npm-debug.log*
+.agents
